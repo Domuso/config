@@ -1,0 +1,39 @@
+{
+  "name": "domuso-configs",
+  "version": "1.0.0",
+  "description": "Domuso configuration management",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "nyc mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Domuso/domuso-configs.git"
+  },
+  "author": "Domuso",
+  "license": "SEE LICENSE IN LICENSE",
+  "bugs": {
+    "url": "https://github.com/Domuso/domuso-configs/issues"
+  },
+  "homepage": "https://github.com/Domuso/domuso-configs#readme",
+  "devDependencies": {
+    "aws-sdk": "^2.161.0",
+    "aws-sdk-mock": "^1.7.0",
+    "chai": "^3.5.0",
+    "chai-as-promised": "^5.3.0",
+    "mocha": "^3.0.2",
+    "nyc": "^11.3.0",
+    "sinon": "^4.1.2",
+    "sinon-chai": "^2.14.0",
+    "sinon-test": "^2.1.2"
+  },
+  "dependencies": {
+    "domuso-logs": "Domuso/domuso-logs"
+  },
+  "engines": {
+    "node": ">=4.0 <5"
+  }
+}
