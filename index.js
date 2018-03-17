@@ -57,16 +57,22 @@ module.exports = (params, cache = false) => {
   
   var result = cache && retrieveCache(params)
   if (!result){
-    result = new Promise((success, failure) => {
+    // chunk the params into 10 due to SSM limitation with getParameters
+    const chunkSize = 10;
+    let chunkedParams = [params.splice(0, chunkSize)];
+    while (params.length > chunkSize){
+      chunkedParams.push(params.splice(0, chunkSize))
+    }
+    result = Promise.all(chunkedParams.map(chunkedParam => {
       var options = {
-        Names: params.map(param => `/${process.env.NODE_ENV}/${param}`),
+        Names: chunkedParams.map(param => `/${process.env.NODE_ENV}/${param}`),
         WithDecryption: true,
       }
-      ssm.getParameters(options, (err, data) => {
-        if (err) return failure(err)
+      let blah = ssm.getParameters(options).promise()
+      return blah.then(data => {
         if (data.InvalidParameters && data.InvalidParameters.length > 0){
           logger.log(`Invalid requested params ${data.InvalidParameters}`)
-          return failure(new Error(`Invalid requested params ${data.InvalidParameters}`)) 
+          throw new Error(`Invalid requested params ${data.InvalidParameters}`)
         }
         var output = {}
         var values = data.Parameters.reduce((prev, param) =>{
@@ -78,9 +84,9 @@ module.exports = (params, cache = false) => {
         Object.assign(cache, values) // save to cache
         
         logger.log(`Received params: ${output}`)
-        success(values)
       })
-    });
+    }))
+    .then(chunkedResults => chunkedResults.reduce((prev, curr) => prev.concat[curr], []))
   }
   return result.then(values => {
     var output = values 

@@ -7,7 +7,8 @@
     "test": "test"
   },
   "scripts": {
-    "test": "nyc mocha"
+    "test": "mocha",
+    "cover": "nyc mocha"
   },
   "repository": {
     "type": "git",
@@ -21,14 +22,12 @@
   "homepage": "https://github.com/Domuso/domuso-configs#readme",
   "devDependencies": {
     "aws-sdk": "^2.161.0",
-    "aws-sdk-mock": "^1.7.0",
     "chai": "^3.5.0",
     "chai-as-promised": "^5.3.0",
     "mocha": "^3.0.2",
     "nyc": "^11.3.0",
     "sinon": "^4.1.2",
-    "sinon-chai": "^2.14.0",
-    "sinon-test": "^2.1.2"
+    "sinon-chai": "^2.14.0"
   },
   "dependencies": {
     "domuso-logs": "Domuso/domuso-logs"
