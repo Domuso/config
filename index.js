@@ -33,7 +33,6 @@ var retrieveCache = (params) => {
   }
   return Promise.resolve(cachedResult)
 }
-
 /**
   Accepts a number of input params and returns with an promise of the requested config values
   
@@ -41,8 +40,7 @@ var retrieveCache = (params) => {
   Array   config.get(['host','username'])             {host: 'value1',username: 'value2'} 
   Object  config.get({host: {name: 'ssm/path'}})      {host: {name: 'value'}}
  **/
- 
-module.exports = (params, cache = false) => {
+let getConfigs = (params, cache = false) => {
   var ssm = new AWS.SSM();
   var outputTemplate = null
   if (!process.env.NODE_ENV) throw new Error('NODE_ENV must be supplied as an environment variable')
@@ -91,3 +89,6 @@ module.exports = (params, cache = false) => {
     return output
   })
 }
+
+module.exports = getConfigs;
+module.exports.get = getConfigs; // alternative descriptive api and useful for mocking purposes
