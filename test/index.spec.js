@@ -1,13 +1,15 @@
-var sinon = require("sinon");
-var chai = require("chai");
-var config = require("../index");
-var sinonTestFactory = require("sinon-test");
-var AWS = require("aws-sdk-mock");
+const sinon = require("sinon");
+const chai = require("chai");
+const AWS = require("aws-sdk-mock");
 
 chai.use(require("chai-as-promised"));
 chai.use(require("sinon-chai"));
-var should = chai.should();
-var sinonTest = sinonTestFactory(sinon);
+const should = chai.should();
+
+const config = require("../index");
+const configSample = require("./fixtures/config");
+const configValues = require("./fixtures/config-values");
+const configVResults = require("./fixtures/config-results");
 
 describe("config", () => {
   beforeEach(() => {
@@ -89,6 +91,9 @@ describe("config", () => {
         cb(null, { Parameters: [{ Name: "/test/path/to/ssm", Value: "blah" }] });
       });
     });
+    afterEach(() => {
+      AWS.restore();
+    });
     it("returns with values when provided an object", () => {
       return config({ "mysql.host": "path/to/ssm" }).then(function(values) {
         values.should.include({ "mysql.host": "blah" });
@@ -103,6 +108,28 @@ describe("config", () => {
       return config({ blah: 3, mysql: { host: "path/to/ssm" } }).then(values => {
         should.not.exist(values.blah);
         Object.keys(values).length.should.equal(2);
+      });
+    });
+  });
+  describe("handles config with more than 10 parameters", () => {
+    beforeEach(() => {
+      AWS.mock("SSM", "getParameters", (params, cb) => {
+        // mocks the response with the appropriate results from the config-results file
+        const Parameters = params.Names.reduce((result, param) => {
+          result.push({ Name: param, Value: configValues[param] });
+          return result;
+        }, []);
+
+        cb(null, { Parameters });
+      });
+    });
+    afterEach(() => {
+      AWS.restore();
+    });
+
+    it("returns with values when provided a deep object that has more than 10 params", () => {
+      return config(configSample).then(function(values) {
+        values.should.deep.equal(configVResults);
       });
     });
   });
