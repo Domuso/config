@@ -8,7 +8,8 @@
   },
   "scripts": {
     "test": "mocha",
-    "cover": "nyc mocha"
+    "cover": "eslint . && nyc mocha",
+    "precommit": "eslint . && nyc npm test"
   },
   "repository": {
     "type": "git",
@@ -22,12 +23,20 @@
   "homepage": "https://github.com/Domuso/domuso-configs#readme",
   "devDependencies": {
     "aws-sdk": "^2.161.0",
+    "aws-sdk-mock": "^1.7.0",
     "chai": "^3.5.0",
     "chai-as-promised": "^5.3.0",
+    "eslint": "^4.19.0",
+    "eslint-config-domuso": "github:domuso/eslint-config-domuso",
+    "eslint-config-prettier": "^2.9.0",
+    "eslint-plugin-prettier": "^2.6.0",
+    "husky": "^0.14.3",
     "mocha": "^3.0.2",
     "nyc": "^11.3.0",
+    "prettier": "^1.11.1",
     "sinon": "^4.1.2",
-    "sinon-chai": "^2.14.0"
+    "sinon-chai": "^2.14.0",
+    "sinon-test": "^2.1.3"
   },
   "dependencies": {
     "domuso-logs": "Domuso/domuso-logs"
