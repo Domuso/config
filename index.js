@@ -1,4 +1,4 @@
-var logger = require("domuso-logs").getLogger("domuso-configs");
+const logger = require("domuso-logs").getLogger("domuso-configs");
 var AWS = require("aws-sdk");
 AWS.config.update({ region: "us-east-1" });
 
@@ -33,9 +33,8 @@ var retrieveCache = params => {
 
     cachedResult[params[i]] = cache[params[i]];
   }
-  return Promise.resolve(cachedResult);
-};
-
+  return Promise.resolve(cachedResult)
+}
 /**
   Accepts a number of input params and returns with an promise of the requested config values
   
@@ -43,8 +42,7 @@ var retrieveCache = params => {
   Array   config.get(['host','username'])             {host: 'value1',username: 'value2'} 
   Object  config.get({host: {name: 'ssm/path'}})      {host: {name: 'value'}}
  **/
-
-module.exports = (params, cache = false) => {
+let getConfigs = (params, cache = false) => {
   var ssm = new AWS.SSM();
   var outputTemplate = null;
   if (!process.env.NODE_ENV)
@@ -103,6 +101,9 @@ module.exports = (params, cache = false) => {
       logger.log("sending params", values);
       output = populateValues(outputTemplate, values);
     }
-    return output;
-  });
-};
+    return output
+  })
+}
+
+module.exports = getConfigs;
+module.exports.get = getConfigs; // alternative descriptive api and useful for mocking purposes
