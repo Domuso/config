@@ -1,5 +1,5 @@
 {
-  "name": "domuso-configs",
+  "name": "config",
   "version": "1.0.0",
   "description": "Domuso configuration management",
   "main": "index.js",
