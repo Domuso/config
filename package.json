@@ -38,9 +38,6 @@
     "sinon-chai": "^2.14.0",
     "sinon-test": "^2.1.3"
   },
-  "dependencies": {
-    "domuso-logs": "Domuso/domuso-logs"
-  },
   "engines": {
     "node": ">=4.0 <5"
   }

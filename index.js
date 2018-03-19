@@ -1,5 +1,4 @@
-const logger = require("domuso-logs").getLogger("domuso-configs");
-var AWS = require("aws-sdk");
+const AWS = require("aws-sdk");
 AWS.config.update({ region: "us-east-1" });
 
 var cache = {};
@@ -33,8 +32,8 @@ var retrieveCache = params => {
 
     cachedResult[params[i]] = cache[params[i]];
   }
-  return Promise.resolve(cachedResult)
-}
+  return Promise.resolve(cachedResult);
+};
 /**
   Accepts a number of input params and returns with an promise of the requested config values
   
@@ -54,7 +53,7 @@ let getConfigs = (params, cache = false) => {
   if (typeof params === "string") params = [params];
   if (!params.length) throw new Error("params must not be empty");
 
-  logger.log("Retrieving params: ", params);
+  console.log("Retrieving params: ", params);
 
   var result = cache && retrieveCache(params);
   if (!result) {
@@ -76,7 +75,7 @@ let getConfigs = (params, cache = false) => {
           .then(data => {
             if (data.InvalidParameters && data.InvalidParameters.length > 0) {
               const errorMsg = `Invalid requested params ${data.InvalidParameters}`;
-              logger.log(errorMsg);
+              console.log(errorMsg);
               throw new Error(errorMsg);
             }
             var output = {};
@@ -88,7 +87,7 @@ let getConfigs = (params, cache = false) => {
 
             Object.assign(cache, values); // save to cache
 
-            logger.log(`Received params: ${output}`);
+            console.log(`Received params: ${output}`);
 
             return values;
           });
@@ -98,12 +97,12 @@ let getConfigs = (params, cache = false) => {
   return result.then(values => {
     var output = values;
     if (outputTemplate) {
-      logger.log("sending params", values);
+      console.log("sending params", values);
       output = populateValues(outputTemplate, values);
     }
-    return output
-  })
-}
+    return output;
+  });
+};
 
 module.exports = getConfigs;
 module.exports.get = getConfigs; // alternative descriptive api and useful for mocking purposes
