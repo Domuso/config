@@ -1,0 +1,16 @@
+{
+"/test/vantiv.url": "a",
+"/test/vantiv.auth.user": "b",
+"/test/vantiv.auth.pass": "c",
+"/test/mysql.host": "d",
+"/test/mysql.database": "e",
+"/test/mysql.username": "f",
+"/test/mysql.password": "g",
+"/test/mysql.port": "h",
+"/test/vantiv.capture.cutoff": "i",
+"/test/vantiv.capture.endpoint": "j",
+"/test/vantiv.capture.user": "k",
+"/test/vantiv.capture.secret": "l",
+"/test/vantiv.capture.alertArn": "m",
+"/test/vantiv.capture.delayMs": "n"
+}

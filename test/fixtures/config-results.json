@@ -1,0 +1,22 @@
+{
+  "url": "a",
+  "auth": {
+    "username": "b",
+    "password": "c"
+  },
+  "mysql": {
+    "host": "d",
+    "database": "e",
+    "user": "f",
+    "password": "g",
+    "port": "h"
+  },
+  "capture": {
+    "cutoff": "i",
+    "endpoint": "j",
+    "username": "k",
+    "secret": "l",
+    "alertArn": "m",
+    "delayMs": "n"
+  }
+}

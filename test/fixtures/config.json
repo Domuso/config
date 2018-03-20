@@ -1,0 +1,22 @@
+{
+  "url": "vantiv.url",
+  "auth": {
+    "username": "vantiv.auth.user",
+    "password": "vantiv.auth.pass"
+  },
+  "mysql": {
+    "host": "mysql.host",
+    "database": "mysql.database",
+    "user": "mysql.username",
+    "password": "mysql.password",
+    "port": "mysql.port"
+  },
+  "capture": {
+    "cutoff": "vantiv.capture.cutoff",
+    "endpoint": "vantiv.capture.endpoint",
+    "username": "vantiv.capture.user",
+    "secret": "vantiv.capture.secret",
+    "alertArn": "vantiv.capture.alertArn",
+    "delayMs": "vantiv.capture.delayMs"
+  }
+}
