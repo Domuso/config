@@ -87,7 +87,7 @@ let getConfigs = (params, cache = false) => {
 
             Object.assign(cache, values); // save to cache
 
-            console.log(`Received params: ${output}`);
+            console.log("Received params", output);
 
             return values;
           });
