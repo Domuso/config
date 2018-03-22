@@ -75,7 +75,7 @@ let getConfigs = (params, cache = false) => {
           .then(data => {
             if (data.InvalidParameters && data.InvalidParameters.length > 0) {
               const errorMsg = `Invalid requested params ${data.InvalidParameters}`;
-              console.log(errorMsg);
+              console.error(errorMsg);
               throw new Error(errorMsg);
             }
             var output = {};
@@ -86,9 +86,6 @@ let getConfigs = (params, cache = false) => {
             }, output);
 
             Object.assign(cache, values); // save to cache
-
-            console.log("Received params", output);
-
             return values;
           });
       })
@@ -97,7 +94,7 @@ let getConfigs = (params, cache = false) => {
   return result.then(values => {
     var output = values;
     if (outputTemplate) {
-      console.log("sending params", values);
+      console.log("merged paramStore result", values);
       output = populateValues(outputTemplate, values);
     }
     return output;
