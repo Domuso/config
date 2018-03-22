@@ -53,8 +53,6 @@ let getConfigs = (params, cache = false) => {
   if (typeof params === "string") params = [params];
   if (!params.length) throw new Error("params must not be empty");
 
-  console.log("Retrieving params: ", params);
-
   var result = cache && retrieveCache(params);
   if (!result) {
     // chunk the params into 10 due to SSM limitation with getParameters
@@ -94,7 +92,6 @@ let getConfigs = (params, cache = false) => {
   return result.then(values => {
     var output = values;
     if (outputTemplate) {
-      console.log("merged paramStore result", values);
       output = populateValues(outputTemplate, values);
     }
     return output;
