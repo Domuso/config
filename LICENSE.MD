@@ -1,1 +1,1 @@
-(c) Copyright 2016 Domuso Inc, all rights reserved
+(c) Copyright Domuso Inc, all rights reserved

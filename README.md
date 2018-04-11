@@ -1,4 +1,4 @@
-# domuso-configs
+# configs
 Configuration management for Domuso next-gen tech stack
 
 ![CircleCI Status](https://circleci.com/gh/Domuso/config.svg?style=shield&circle-token=b9acc16e755de9410b485b2c2edc8869966af746)
