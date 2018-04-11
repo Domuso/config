@@ -11,16 +11,17 @@
     "cover": "eslint . && nyc mocha",
     "precommit": "eslint . && nyc npm test"
   },
+  "private": true,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Domuso/domuso-configs.git"
+    "url": "git+https://github.com/Domuso/config.git"
   },
   "author": "Domuso",
-  "license": "(c) Copyright 2016 Domuso Inc, all rights reserved",
+  "license": "SEE LICENSE IN LICENSE.MD",
   "bugs": {
-    "url": "https://github.com/Domuso/domuso-configs/issues"
+    "url": "https://github.com/Domuso/config/issues"
   },
-  "homepage": "https://github.com/Domuso/domuso-configs#readme",
+  "homepage": "https://github.com/Domuso/config#readme",
   "devDependencies": {
     "aws-sdk": "^2.161.0",
     "aws-sdk-mock": "^1.7.0",
