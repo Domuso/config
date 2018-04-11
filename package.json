@@ -8,8 +8,8 @@
   },
   "scripts": {
     "test": "mocha",
-    "cover": "eslint . && nyc mocha",
-    "precommit": "eslint . && nyc npm test"
+    "cover": "nyc --check-coverage npm test",
+    "precommit": "eslint . && npm run cover"
   },
   "private": true,
   "repository": {

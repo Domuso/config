@@ -53,8 +53,6 @@ let getConfigs = (params, cache = false) => {
   if (typeof params === "string") params = [params];
   if (!params.length) throw new Error("params must not be empty");
 
-  console.log("Retrieving params: ", params);
-
   var result = cache && retrieveCache(params);
   if (!result) {
     // chunk the params into 10 due to SSM limitation with getParameters
@@ -75,7 +73,7 @@ let getConfigs = (params, cache = false) => {
           .then(data => {
             if (data.InvalidParameters && data.InvalidParameters.length > 0) {
               const errorMsg = `Invalid requested params ${data.InvalidParameters}`;
-              console.log(errorMsg);
+              console.error(errorMsg);
               throw new Error(errorMsg);
             }
             var output = {};
@@ -86,9 +84,6 @@ let getConfigs = (params, cache = false) => {
             }, output);
 
             Object.assign(cache, values); // save to cache
-
-            console.log("Received params", output);
-
             return values;
           });
       })
@@ -97,7 +92,6 @@ let getConfigs = (params, cache = false) => {
   return result.then(values => {
     var output = values;
     if (outputTemplate) {
-      console.log("sending params", values);
       output = populateValues(outputTemplate, values);
     }
     return output;
