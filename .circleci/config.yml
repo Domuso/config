@@ -9,11 +9,51 @@ jobs:
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
           name: install dependencies
-          command: npm install
+          command: npm install 
       - run:
           name: test
-          command: npm run precommit
+          command: npm run cover 
       - save_cache:
           key: dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
+  deploy:
+     docker:
+      - image: circleci/node:6.10.3
+     steps:
+      - checkout
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+      - run: npm run deploy
+    
+workflows:
+  version: 2
+  continuous-deploy:
+    jobs:
+      - build:
+          context: devmuso-test
+      - deploy:
+          context: devmuso-test
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
+  deploy-uat:
+    jobs:
+      - build:
+          context: devmuso-uat
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /[0-9]{10}/
+      - deploy:
+          context: devmuso-uat
+          requires:
+            - build
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /[0-9]{10}/
