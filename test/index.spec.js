@@ -23,29 +23,29 @@ describe("config", () => {
   });
   it("throws an error when NODE_ENV is not defined", () => {
     process.env.NODE_ENV = "";
-    (() => config()).should.throw("NODE_ENV must be supplied");
+    (() => config.get()).should.throw("NODE_ENV must be supplied");
   });
   it("throws an error when params is empty", () => {
-    (() => config([])).should.throw("params must not be empty");
+    (() => config.get([])).should.throw("params must not be empty");
   });
   it("returns a promise", () => {
-    config(["blah"]).should.be.an.instanceof(Promise);
+    config.get(["blah"]).should.be.an.instanceof(Promise);
   });
   it("fails promise when error", () => {
     AWS.mock("SSM", "getParameters", (params, cb) => {
       cb(new Error("some AWS error"));
     });
 
-    return config(["mysql.host"]).should.eventually.be.rejectedWith("some AWS error");
+    return config.get(["mysql.host"]).should.eventually.be.rejectedWith("some AWS error");
   });
   it("fails promise when there are any invalid parameters returned", () => {
     AWS.mock("SSM", "getParameters", (params, cb) => {
       cb(null, { InvalidParameters: ["some-invalid-param"] });
     });
 
-    return config(["mysql.host"]).should.eventually.be.rejectedWith(
-      "Error: Invalid requested params"
-    );
+    return config
+      .get(["mysql.host"])
+      .should.eventually.be.rejectedWith("Error: Invalid requested params");
   });
   describe("fetching values", () => {
     beforeEach(() => {
@@ -57,20 +57,29 @@ describe("config", () => {
       AWS.restore();
     });
     it("returns with values when provided an array", () => {
-      return config(["mysql.host"]).then(function(values) {
+      let params = ["mysql.host"];
+      return config.get(params).then(function(values) {
         values.should.include({ "mysql.host": "some-host" });
       });
     });
+    it("does not modify the original array contents", () => {
+      let params = ["mysql.host"];
+      return config.get(params).then(function(values) {
+        params.should.contain("mysql.host");
+        params.should.have.length(1);
+      });
+    });
     it("returns with values when provided a string", () => {
-      return config("mysql.host").then(function(values) {
+      return config.get("mysql.host").then(function(values) {
         values.should.include({ "mysql.host": "some-host" });
       });
     });
     it("returns with cached values when requested", () => {
       var spy = sinon.spy();
       AWS.mock("SSM", "getParameters", spy);
-      return config("mysql.host", true)
-        .then(() => config("mysql.host", true))
+      return config
+        .get("mysql.host", true)
+        .then(() => config.get("mysql.host", true))
         .then(() => {
           spy.callCount.should.be.at.most(1);
         });
@@ -78,8 +87,9 @@ describe("config", () => {
     it("returns with fresh values by default", () => {
       var spy = sinon.spy();
       AWS.mock("SSM", "getParameters", spy);
-      return config("mysql.host")
-        .then(() => config("mysql.host"))
+      return config
+        .get("mysql.host")
+        .then(() => config.get("mysql.host"))
         .then(() => {
           spy.callCount.should.be.at.most(0);
         });
@@ -95,17 +105,17 @@ describe("config", () => {
       AWS.restore();
     });
     it("returns with values when provided an object", () => {
-      return config({ "mysql.host": "path/to/ssm" }).then(function(values) {
+      return config.get({ "mysql.host": "path/to/ssm" }).then(function(values) {
         values.should.include({ "mysql.host": "blah" });
       });
     });
     it("returns with values when provided a deep object", () => {
-      return config({ mysql: { host: "path/to/ssm" } }).then(function(values) {
+      return config.get({ mysql: { host: "path/to/ssm" } }).then(function(values) {
         values.should.deep.equal({ mysql: { host: "blah" } });
       });
     });
     it("ignores non-string non-object values", () => {
-      return config({ blah: 3, mysql: { host: "path/to/ssm" } }).then(values => {
+      return config.get({ blah: 3, mysql: { host: "path/to/ssm" } }).then(values => {
         should.not.exist(values.blah);
         Object.keys(values).length.should.equal(2);
       });
@@ -128,7 +138,7 @@ describe("config", () => {
     });
 
     it("returns with values when provided a deep object that has more than 10 params", () => {
-      return config(configSample).then(function(values) {
+      return config.get(configSample).then(function(values) {
         values.should.deep.equal(configVResults);
       });
     });

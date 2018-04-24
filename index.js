@@ -41,19 +41,20 @@ var retrieveCache = params => {
   Array   config.get(['host','username'])             {host: 'value1',username: 'value2'} 
   Object  config.get({host: {name: 'ssm/path'}})      {host: {name: 'value'}}
  **/
-let getConfigs = (params, cache = false) => {
+let getConfigs = (request, cache = false) => {
   var ssm = new AWS.SSM();
   var outputTemplate = null;
   if (!process.env.NODE_ENV)
     throw new Error("NODE_ENV must be supplied as an environment variable");
-  if (!Array.isArray(params) && typeof params === "object") {
-    outputTemplate = params;
-    params = getAllKeys(params);
+  if (!Array.isArray(request) && typeof request === "object") {
+    outputTemplate = request;
+    request = getAllKeys(request);
   }
-  if (typeof params === "string") params = [params];
-  if (!params.length) throw new Error("params must not be empty");
+  if (typeof request === "string") request = [request];
+  if (!request.length) throw new Error("params must not be empty");
+  let params = [].concat(request); // create a new copy
 
-  var result = cache && retrieveCache(params);
+  var result = cache && retrieveCache(request);
   if (!result) {
     // chunk the params into 10 due to SSM limitation with getParameters
     const chunkSize = 10;
