@@ -117,16 +117,36 @@ describe("config", () => {
         });
     });
   });
+
   describe("fetching values by path", () => {
+    afterEach(() => {
+      AWS.restore();
+    });
+
     it("returns with values when provided a string", () => {
-      AWS.mock("SSM", "getParametersByPath", (params, cb) => {
-        cb(null, { Parameters: [{ Name: "/test/mysql.host", Value: "some-host" }] });
+      const stub = sinon.stub();
+
+      stub.onFirstCall().callsFake((params, cb) => {
+        cb(null, {
+          Parameters: [{ Name: "/test/mysql.host", Value: "some-host" }],
+          NextToken: "abc"
+        });
       });
-      return config.getByPath("/test").then(function(values) {
-        values.should.include({ "mysql.host": "some-host" });
+
+      stub.onSecondCall().callsFake((params, cb) => {
+        cb(null, {
+          Parameters: [{ Name: "/test/mysql.user", Value: "some-user" }]
+        });
+      });
+
+      AWS.mock("SSM", "getParametersByPath", stub);
+
+      return config.getByPath("/test").then(values => {
+        values.should.include({ "mysql.host": "some-host", "mysql.user": "some-user" });
       });
     });
   });
+
   describe("fetching templated values", () => {
     beforeEach(() => {
       AWS.mock("SSM", "getParameters", (params, cb) => {
