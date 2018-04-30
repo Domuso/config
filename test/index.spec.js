@@ -47,6 +47,28 @@ describe("config", () => {
       .get(["mysql.host"])
       .should.eventually.be.rejectedWith("Error: Invalid requested params");
   });
+  it("throws an error when params is empty", () => {
+    (() => config.getByPath()).should.throw("params must not be empty");
+  });
+  it("returns a promise", () => {
+    config.getByPath("/blah").should.be.an.instanceof(Promise);
+  });
+  it("fails promise when error", () => {
+    AWS.mock("SSM", "getParametersByPath", (params, cb) => {
+      cb(new Error("some AWS error"));
+    });
+
+    return config.getByPath("/dev").should.eventually.be.rejectedWith("some AWS error");
+  });
+  it("fails promise when there are any invalid parameters returned", () => {
+    AWS.mock("SSM", "getParametersByPath", (params, cb) => {
+      cb(null, { InvalidParameters: ["some-invalid-param"] });
+    });
+
+    return config
+      .getByPath("/dev")
+      .should.eventually.be.rejectedWith("Error: Invalid requested params");
+  });
   describe("fetching values", () => {
     beforeEach(() => {
       AWS.mock("SSM", "getParameters", (params, cb) => {
@@ -93,6 +115,16 @@ describe("config", () => {
         .then(() => {
           spy.callCount.should.be.at.most(0);
         });
+    });
+  });
+  describe("fetching values by path", () => {
+    it("returns with values when provided a string", () => {
+      AWS.mock("SSM", "getParametersByPath", (params, cb) => {
+        cb(null, { Parameters: [{ Name: "/test/mysql.host", Value: "some-host" }] });
+      });
+      return config.getByPath("/test").then(function(values) {
+        values.should.include({ "mysql.host": "some-host" });
+      });
     });
   });
   describe("fetching templated values", () => {
