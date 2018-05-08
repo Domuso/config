@@ -7,6 +7,7 @@
     "test": "test"
   },
   "scripts": {
+    "start": "node start-server.js",
     "test": "mocha",
     "cover": "nyc --check-coverage npm test",
     "precommit": "eslint . && npm run cover"
@@ -25,16 +26,20 @@
   "devDependencies": {
     "aws-sdk": "^2.161.0",
     "aws-sdk-mock": "^1.7.0",
+    "axios": "^0.18.0",
+    "body-parser": "^1.18.2",
     "chai": "^3.5.0",
     "chai-as-promised": "^5.3.0",
     "eslint": "^4.19.0",
     "eslint-config-domuso": "git+ssh://git@github.com:domuso/eslint-config-domuso#2af75e5f23a115963ccce344d00ef776dd1d574d",
     "eslint-config-prettier": "^2.9.0",
     "eslint-plugin-prettier": "^2.6.0",
+    "express": "^4.16.3",
     "husky": "^0.14.3",
     "mocha": "^3.0.2",
     "nyc": "^11.3.0",
     "prettier": "^1.11.1",
+    "serverless": "^1.27.2",
     "sinon": "^4.1.2",
     "sinon-chai": "^2.14.0",
     "sinon-test": "^2.1.3"
