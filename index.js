@@ -48,7 +48,7 @@ let getConfigs = (request, cache = false) => {
     throw new Error("NODE_ENV must be supplied as an environment variable");
   if (process.env.NODE_ENV === "local") {
     let axios = require("axios"); // only bundle in devDependencies
-    return axios.get("http://localhost:10641").then(res => res.data);
+    return axios.get(`http://localhost:${exports.localPort}`).then(res => res.data);
   }
   if (!Array.isArray(request) && typeof request === "object") {
     outputTemplate = request;
@@ -102,6 +102,6 @@ let getConfigs = (request, cache = false) => {
     return output;
   });
 };
-
 module.exports = getConfigs;
 module.exports.get = getConfigs; // alternative descriptive api and useful for mocking purposes
+module.exports.localPort = 10641;
