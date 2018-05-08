@@ -158,7 +158,7 @@ describe("config", () => {
       axiosStub.resolves(mockResponse);
       return config.get("whatever").then(res => {
         axiosStub.should.have.been.calledOnce;
-        res.should.equal(mockResponse.data);
+        res.should.deep.equal(mockResponse.data);
       });
     });
   });
