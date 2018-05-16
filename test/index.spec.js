@@ -48,6 +48,28 @@ describe("config", () => {
       .get(["mysql.host"])
       .should.eventually.be.rejectedWith("Error: Invalid requested params");
   });
+  it("throws an error when params is empty", () => {
+    (() => config.getByPath()).should.throw("params must not be empty");
+  });
+  it("returns a promise", () => {
+    config.getByPath("/blah").should.be.an.instanceof(Promise);
+  });
+  it("fails promise when error", () => {
+    AWS.mock("SSM", "getParametersByPath", (params, cb) => {
+      cb(new Error("some AWS error"));
+    });
+
+    return config.getByPath("/dev").should.eventually.be.rejectedWith("some AWS error");
+  });
+  it("fails promise when there are any invalid parameters returned", () => {
+    AWS.mock("SSM", "getParametersByPath", (params, cb) => {
+      cb(null, { InvalidParameters: ["some-invalid-param"] });
+    });
+
+    return config
+      .getByPath("/dev")
+      .should.eventually.be.rejectedWith("Error: Invalid requested params");
+  });
   describe("fetching values", () => {
     beforeEach(() => {
       AWS.mock("SSM", "getParameters", (params, cb) => {
@@ -96,6 +118,36 @@ describe("config", () => {
         });
     });
   });
+
+  describe("fetching values by path", () => {
+    afterEach(() => {
+      AWS.restore();
+    });
+
+    it("returns with values when provided a string", () => {
+      const stub = sinon.stub();
+
+      stub.onFirstCall().callsFake((params, cb) => {
+        cb(null, {
+          Parameters: [{ Name: "/test/mysql.host", Value: "some-host" }],
+          NextToken: "abc"
+        });
+      });
+
+      stub.onSecondCall().callsFake((params, cb) => {
+        cb(null, {
+          Parameters: [{ Name: "/test/mysql.user", Value: "some-user" }]
+        });
+      });
+
+      AWS.mock("SSM", "getParametersByPath", stub);
+
+      return config.getByPath("/test").then(values => {
+        values.should.include({ "mysql.host": "some-host", "mysql.user": "some-user" });
+      });
+    });
+  });
+
   describe("fetching templated values", () => {
     beforeEach(() => {
       AWS.mock("SSM", "getParameters", (params, cb) => {
