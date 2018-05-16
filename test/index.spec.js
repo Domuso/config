@@ -1,5 +1,6 @@
 const sinon = require("sinon");
 const chai = require("chai");
+const axios = require("axios");
 const AWS = require("aws-sdk-mock");
 
 chai.use(require("chai-as-promised"));
@@ -192,6 +193,24 @@ describe("config", () => {
     it("returns with values when provided a deep object that has more than 10 params", () => {
       return config.get(configSample).then(function(values) {
         values.should.deep.equal(configVResults);
+      });
+    });
+  });
+  describe("when environment is local", () => {
+    let axiosStub = null;
+    beforeEach(() => {
+      process.env.NODE_ENV = "local";
+      axiosStub = sinon.stub(axios, "get");
+    });
+    afterEach(() => {
+      axiosStub.restore();
+    });
+    it("makes an http request instead", () => {
+      let mockResponse = { data: { whatever: "hi" } };
+      axiosStub.resolves(mockResponse);
+      return config.get("whatever").then(res => {
+        axiosStub.should.have.been.calledOnce;
+        res.should.deep.equal(mockResponse.data);
       });
     });
   });
