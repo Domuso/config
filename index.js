@@ -41,7 +41,7 @@ var retrieveCache = params => {
   Array   config.get(['host','username'])             {host: 'value1',username: 'value2'}
   Object  config.get({host: {name: 'ssm/path'}})      {host: {name: 'value'}}
  **/
-let getConfigs = (request, cache = false) => {
+let getConfigs = (request, useCache = false) => {
   var ssm = new AWS.SSM();
   var outputTemplate = null;
   if (!process.env.NODE_ENV)
@@ -58,7 +58,7 @@ let getConfigs = (request, cache = false) => {
   if (!request.length) throw new Error("params must not be empty");
   let params = [].concat(request); // create a new copy
 
-  var result = cache && retrieveCache(request);
+  var result = useCache && retrieveCache(request);
   if (!result) {
     // chunk the params into 10 due to SSM limitation with getParameters
     const chunkSize = 10;
@@ -138,3 +138,4 @@ module.exports = getConfigs;
 module.exports.get = getConfigs; // alternative descriptive api and useful for mocking purposes
 module.exports.getByPath = getConfigsByPath;
 module.exports.localPort = 10641;
+module.exports.cache = cache; // export for testing purposes
