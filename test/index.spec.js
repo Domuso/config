@@ -10,7 +10,7 @@ const should = chai.should();
 const config = require("../index");
 const configSample = require("./fixtures/config");
 const configValues = require("./fixtures/config-values");
-const configVResults = require("./fixtures/config-results");
+const configResults = require("./fixtures/config-results");
 
 describe("config", () => {
   beforeEach(() => {
@@ -70,11 +70,15 @@ describe("config", () => {
       .getByPath("/dev")
       .should.eventually.be.rejectedWith("Error: Invalid requested params");
   });
+
   describe("fetching values", () => {
+    let spy;
     beforeEach(() => {
-      AWS.mock("SSM", "getParameters", (params, cb) => {
+      spy = sinon.spy((params, cb) => {
         cb(null, { Parameters: [{ Name: "/test/mysql.host", Value: "some-host" }] });
       });
+
+      AWS.mock("SSM", "getParameters", spy);
     });
     afterEach(() => {
       AWS.restore();
@@ -98,24 +102,18 @@ describe("config", () => {
       });
     });
     it("returns with cached values when requested", () => {
-      var spy = sinon.spy();
-      AWS.mock("SSM", "getParameters", spy);
-      return config
-        .get("mysql.host", true)
-        .then(() => config.get("mysql.host", true))
-        .then(() => {
-          spy.callCount.should.be.at.most(1);
-        });
+      return config.get("mysql.host").then(() =>
+        config.get("mysql.host", true).then(() => {
+          spy.callCount.should.equal(1);
+        })
+      );
     });
     it("returns with fresh values by default", () => {
-      var spy = sinon.spy();
-      AWS.mock("SSM", "getParameters", spy);
-      return config
-        .get("mysql.host")
-        .then(() => config.get("mysql.host"))
-        .then(() => {
-          spy.callCount.should.be.at.most(0);
-        });
+      return config.get("mysql.host").then(() =>
+        config.get("mysql.host").then(() => {
+          spy.callCount.should.equal(2);
+        })
+      );
     });
   });
 
@@ -174,6 +172,7 @@ describe("config", () => {
       });
     });
   });
+
   describe("handles config with more than 10 parameters", () => {
     beforeEach(() => {
       AWS.mock("SSM", "getParameters", (params, cb) => {
@@ -192,10 +191,11 @@ describe("config", () => {
 
     it("returns with values when provided a deep object that has more than 10 params", () => {
       return config.get(configSample).then(function(values) {
-        values.should.deep.equal(configVResults);
+        values.should.deep.equal(configResults);
       });
     });
   });
+
   describe("when environment is local", () => {
     let axiosStub = null;
     beforeEach(() => {
