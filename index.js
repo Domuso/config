@@ -138,4 +138,3 @@ module.exports = getConfigs;
 module.exports.get = getConfigs; // alternative descriptive api and useful for mocking purposes
 module.exports.getByPath = getConfigsByPath;
 module.exports.localPort = 10641;
-module.exports.cache = cache; // export for testing purposes
