@@ -214,4 +214,52 @@ describe("config", () => {
       });
     });
   });
+
+  it("exists", () => {
+    config.getExports.should.be.a("function");
+  });
+  it("throws an error when params not an object", () => {
+    (() => config.getExports("test")).should.throw("params must be an object");
+  });
+  it("returns a promise", () => {
+    config.getExports({ blah: "asd" }).should.be.an.instanceof(Promise);
+  });
+  it("fails promise when error", () => {
+    AWS.mock("CloudFormation", "listExports", cb => {
+      cb(new Error("some AWS error"));
+    });
+
+    return config.getExports({ foo: "bar" }).should.eventually.be.rejectedWith("some AWS error");
+  });
+  it("fails promise when an exported value is not found", () => {
+    AWS.mock("CloudFormation", "listExports", cb => {
+      cb(null, { Exports: [{ Name: "foo-test", Value: "bar" }] });
+    });
+
+    return config
+      .getExports({ hello: "world" })
+      .should.eventually.be.rejectedWith("Error: Invalid exported name world");
+  });
+  it("returns promise with requested exported values", () => {
+    AWS.mock("CloudFormation", "listExports", cb => {
+      cb(null, { Exports: [{ Name: "foo-test", Value: "bar" }] });
+    });
+
+    return config.getExports({ hello: "foo" }).should.eventually.include({ hello: "bar" });
+  });
+  it("returns promise with requested exported values (with NextToken)", () => {
+    const stub = sinon.stub();
+
+    stub.onFirstCall().callsFake(cb => {
+      cb(null, { NextToken: "1", Exports: [{ Name: "foo-test", Value: "bar" }] });
+    });
+
+    stub.onSecondCall().callsFake((params, cb) => {
+      cb(null, { Exports: [{ Name: "foo2-test", Value: "bar" }] });
+    });
+
+    AWS.mock("CloudFormation", "listExports", stub);
+
+    return config.getExports({ hello: "foo2" }).should.eventually.include({ hello: "bar" });
+  });
 });
