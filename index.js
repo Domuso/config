@@ -134,7 +134,62 @@ var getConfigsByPath = path => {
   return _getConfigsByPath(ssm, path);
 };
 
+var _getAllExports = () => {
+  var cloudformation = new AWS.CloudFormation();
+  return new Promise((resolve, reject) => {
+    var results = {};
+    var readExports = data => {
+      data.Exports.forEach(exportValue => {
+        results[exportValue.Name] = exportValue.Value;
+      });
+      if (data.NextToken) {
+        cloudformation
+          .listExports({
+            NextToken: data.NextToken
+          })
+          .promise()
+          .then(readExports)
+          .catch(reject);
+      } else {
+        resolve(results);
+      }
+    };
+    cloudformation
+      .listExports()
+      .promise()
+      .then(readExports)
+      .catch(reject);
+  });
+};
+
+/**
+ Accepts a list of exported CloudFormation names and returns with a promise of the values.
+
+ Object   config.getExports({'foo':'exportName'})             {foo:'exportValue'}
+ **/
+var getExports = request => {
+  if (typeof request !== "object") {
+    throw new Error("params must be an object");
+  }
+
+  var outputTemplate = request;
+  request = getAllKeys(request);
+
+  return _getAllExports().then(exports => {
+    var values = {};
+    request.forEach(name => {
+      if (exports[name]) {
+        values[name] = exports[name];
+      } else {
+        throw new Error(`Invalid exported name ${name}`);
+      }
+    });
+    return populateValues(outputTemplate, values);
+  });
+};
+
 module.exports = getConfigs;
 module.exports.get = getConfigs; // alternative descriptive api and useful for mocking purposes
 module.exports.getByPath = getConfigsByPath;
+module.exports.getExports = getExports;
 module.exports.localPort = 10641;
