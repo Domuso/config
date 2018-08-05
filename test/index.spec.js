@@ -233,7 +233,7 @@ describe("config", () => {
   });
   it("fails promise when an exported value is not found", () => {
     AWS.mock("CloudFormation", "listExports", cb => {
-      cb(null, { Exports: [{ Name: "foo", Value: "bar" }] });
+      cb(null, { Exports: [{ Name: "foo-test", Value: "bar" }] });
     });
 
     return config
@@ -242,7 +242,7 @@ describe("config", () => {
   });
   it("returns promise with requested exported values", () => {
     AWS.mock("CloudFormation", "listExports", cb => {
-      cb(null, { Exports: [{ Name: "foo", Value: "bar" }] });
+      cb(null, { Exports: [{ Name: "foo-test", Value: "bar" }] });
     });
 
     return config.getExports({ hello: "foo" }).should.eventually.include({ hello: "bar" });
@@ -251,11 +251,11 @@ describe("config", () => {
     const stub = sinon.stub();
 
     stub.onFirstCall().callsFake(cb => {
-      cb(null, { NextToken: "1", Exports: [{ Name: "foo", Value: "bar" }] });
+      cb(null, { NextToken: "1", Exports: [{ Name: "foo-test", Value: "bar" }] });
     });
 
     stub.onSecondCall().callsFake((params, cb) => {
-      cb(null, { Exports: [{ Name: "foo2", Value: "bar" }] });
+      cb(null, { Exports: [{ Name: "foo2-test", Value: "bar" }] });
     });
 
     AWS.mock("CloudFormation", "listExports", stub);

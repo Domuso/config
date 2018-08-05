@@ -178,10 +178,10 @@ var getExports = request => {
   return _getAllExports().then(exports => {
     var values = {};
     request.forEach(name => {
-      if (exports[name]) {
+      if (exports[`${name}-${process.env.NODE_ENV}`]) {
         values[name] = exports[name];
       } else {
-        throw new Error(`Invalid exported name ${name}`);
+        throw new Error(`Invalid exported name ${name}-${process.env.NODE_ENV}`);
       }
     });
     return populateValues(outputTemplate, values);
