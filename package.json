@@ -45,7 +45,7 @@
     "sinon-test": "^2.1.3",
     "supertest": "^3.0.0"
   },
-  "peerDependencies": {
+  "dependencies": {
     "aws-sdk": "^2.161.0"
   }
 }
