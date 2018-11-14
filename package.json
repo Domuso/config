@@ -6,6 +6,7 @@
   "directories": {
     "test": "test"
   },
+  "bin": { "configBuilder": "./bin/builder.js" },
   "scripts": {
     "start": "node ./bin/start-server.js",
     "test": "mocha",
