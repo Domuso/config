@@ -9,8 +9,8 @@
   "bin": { "configBuilder": "./bin/builder.js" },
   "scripts": {
     "start": "node ./bin/start-server.js",
-    "test": "mocha",
-    "cover": "nyc --check-coverage npm test",
+    "test": "NODE_ENV=test mocha",
+    "cover": "nyc --check-coverage --lines 100 npm test",
     "precommit": "eslint . && npm run cover"
   },
   "private": true,
@@ -32,7 +32,7 @@
     "chai": "^3.5.0",
     "chai-as-promised": "^5.3.0",
     "eslint": "^4.19.0",
-    "eslint-config-domuso":
+    "eslint-config-domuso": 
       "git+ssh://git@github.com:domuso/eslint-config-domuso#bbe265032658c361f16a2cdea9fbebcb8bca562f",
     "eslint-config-prettier": "^2.9.0",
     "eslint-plugin-prettier": "^2.6.0",
@@ -41,6 +41,7 @@
     "mocha": "^3.0.2",
     "nyc": "^11.3.0",
     "prettier": "^1.11.1",
+    "rewire": "^4.0.1",
     "sinon": "^4.1.2",
     "sinon-chai": "^2.14.0",
     "sinon-test": "^2.1.3",

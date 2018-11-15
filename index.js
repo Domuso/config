@@ -41,7 +41,7 @@ var retrieveCache = params => {
   Array   config.get(['host','username'])             {host: 'value1',username: 'value2'}
   Object  config.get({host: {name: 'ssm/path'}})      {host: {name: 'value'}}
  **/
-let getConfigs = (request, useCache = false) => {
+let getConfigs = (request, useCache = true) => {
   var ssm = new AWS.SSM();
   var outputTemplate = null;
   if (!process.env.NODE_ENV)
