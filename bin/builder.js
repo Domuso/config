@@ -37,38 +37,49 @@ console.log("\x1b[32mSTARTING TO BUILD CONFIG FILE\x1b[0m\n");
 const configTmpl = require(templatePath);
 
 console.log("Getting Config from SSM");
-config.get(configTmpl).then(cfg => {
-  console.log("Successfully got SSM config");
+config
+  .get(configTmpl)
+  .catch(e => {
+    console.log("\x1b[31m\nERROR: Failed Getting SSM config\n\x1b[0m");
+    process.exit(1);
+  })
+  .then(cfg => {
+    console.log("\x1b[32m\nSuccessfully got SSM config\n\x1b[0m");
 
-  function writeFile() {
-    console.log(`Writing to ${outputPath}`);
-    fs.writeFileSync(outputPath, "module.exports =" + JSON.stringify(cfg)); // { flag: "w" } => default. overwrites. { flag: "wx" } => don't overwrite
-    console.log("Done Building config");
-  }
+    function writeFile() {
+      console.log(`Writing to ${outputPath}`);
+      fs.writeFileSync(outputPath, "module.exports =" + JSON.stringify(cfg)); // { flag: "w" } => default. overwrites. { flag: "wx" } => don't overwrite
+      console.log("Done Building config");
+    }
 
-  let shouldWrite = true;
-  if (fs.existsSync(outputPath)) {
-    const readline = require("readline").createInterface({
-      input: process.stdin,
-      output: process.stdout
-    });
+    let shouldWrite = true;
+    if (fs.existsSync(outputPath)) {
+      const readline = require("readline").createInterface({
+        input: process.stdin,
+        output: process.stdout
+      });
 
-    return readline.question(
-      `\x1b[41mConfig file already exists. Overwrite (y/n)?\x1b[0m `,
-      answer => {
-        if (!["yes", "y"].includes(answer.toLowerCase())) {
-          console.log("Skipping config creation");
-          shouldWrite = false;
+      return readline.question(
+        `\x1b[41mConfig file already exists. Overwrite (y/n)?\x1b[0m `,
+        answer => {
+          if (!["yes", "y"].includes(answer.toLowerCase())) {
+            console.log("Skipping config creation");
+            shouldWrite = false;
+          }
+
+          if (shouldWrite) {
+            writeFile();
+          }
+
+          readline.close();
         }
-
-        if (shouldWrite) {
-          writeFile();
-        }
-
-        readline.close();
-      }
-    );
-  } else {
-    writeFile();
-  }
-});
+      );
+    } else {
+      writeFile();
+    }
+  })
+  .catch(e => {
+    console.log("\x1b[31m\nERROR: Failed creating config file\n\x1b[0m");
+    console.log(`\nDetails: ${e}`);
+    process.exit(1);
+  });
