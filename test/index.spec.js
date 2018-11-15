@@ -2,22 +2,26 @@ const sinon = require("sinon");
 const chai = require("chai");
 const axios = require("axios");
 const AWS = require("aws-sdk-mock");
+const rewire = require("rewire");
 
 chai.use(require("chai-as-promised"));
 chai.use(require("sinon-chai"));
 const should = chai.should();
 
-const config = require("../index");
+const config = rewire("../index");
 const configSample = require("./fixtures/config");
 const configValues = require("./fixtures/config-values");
 const configResults = require("./fixtures/config-results");
 
 describe("config", () => {
+  let resetCache;
   beforeEach(() => {
     process.env.NODE_ENV = "test";
+    resetCache = config.__set__("cache", {});
   });
   afterEach(() => {
     AWS.restore();
+    resetCache();
   });
   it("exists", () => {
     config.should.be.a("function");
@@ -28,9 +32,6 @@ describe("config", () => {
   });
   it("throws an error when params is empty", () => {
     (() => config.get([])).should.throw("params must not be empty");
-  });
-  it("returns a promise", () => {
-    config.get(["blah"]).should.be.an.instanceof(Promise);
   });
   it("fails promise when error", () => {
     AWS.mock("SSM", "getParameters", (params, cb) => {
@@ -51,9 +52,7 @@ describe("config", () => {
   it("throws an error when params is empty", () => {
     (() => config.getByPath()).should.throw("params must not be empty");
   });
-  it("returns a promise", () => {
-    config.getByPath("/blah").should.be.an.instanceof(Promise);
-  });
+
   it("fails promise when error", () => {
     AWS.mock("SSM", "getParametersByPath", (params, cb) => {
       cb(new Error("some AWS error"));
@@ -83,6 +82,11 @@ describe("config", () => {
     afterEach(() => {
       AWS.restore();
     });
+
+    it("returns a promise", () => {
+      config.get(["blah"]).should.be.an.instanceof(Promise);
+    });
+
     it("returns with values when provided an array", () => {
       let params = ["mysql.host"];
       return config.get(params).then(function(values) {
@@ -101,16 +105,16 @@ describe("config", () => {
         values.should.include({ "mysql.host": "some-host" });
       });
     });
-    it("returns with cached values when requested", () => {
+    it("returns with cached values by default", () => {
       return config.get("mysql.host").then(() =>
-        config.get("mysql.host", true).then(() => {
+        config.get("mysql.host").then(() => {
           spy.callCount.should.equal(1);
         })
       );
     });
-    it("returns with fresh values by default", () => {
+    it("returns with fresh values when requested", () => {
       return config.get("mysql.host").then(() =>
-        config.get("mysql.host").then(() => {
+        config.get("mysql.host", false).then(() => {
           spy.callCount.should.equal(2);
         })
       );
@@ -118,13 +122,21 @@ describe("config", () => {
   });
 
   describe("fetching values by path", () => {
+    const stub = sinon.stub();
+
+    beforeEach(() => {
+      AWS.mock("SSM", "getParametersByPath", stub);
+    });
     afterEach(() => {
       AWS.restore();
+      stub.reset();
+    });
+
+    it("returns a promise", () => {
+      config.getByPath("/blah").should.be.an.instanceof(Promise);
     });
 
     it("returns with values when provided a string", () => {
-      const stub = sinon.stub();
-
       stub.onFirstCall().callsFake((params, cb) => {
         cb(null, {
           Parameters: [{ Name: "/test/mysql.host", Value: "some-host" }],
