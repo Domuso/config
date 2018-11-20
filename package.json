@@ -4,7 +4,8 @@
   "description": "Domuso configuration management",
   "main": "index.js",
   "directories": {
-    "test": "test"
+    "test": "test",
+    "bin": "bin"
   },
   "bin": { "configBuilder": "./bin/builder.js" },
   "scripts": {
