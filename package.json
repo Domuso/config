@@ -1,11 +1,10 @@
 {
   "name": "config",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Domuso configuration management",
   "main": "index.js",
   "directories": {
-    "test": "test",
-    "bin": "bin"
+    "test": "test"
   },
   "bin": { "configBuilder": "./bin/builder.js" },
   "scripts": {
