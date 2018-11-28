@@ -41,6 +41,7 @@ config
   .get(configTmpl)
   .catch(e => {
     console.log("\x1b[31m\nERROR: Failed Getting SSM config\n\x1b[0m");
+    console.log(`\nDetails: ${e}`);
     process.exit(1);
   })
   .then(cfg => {
