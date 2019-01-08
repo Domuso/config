@@ -41,7 +41,7 @@ var retrieveCache = params => {
   Array   config.get(['host','username'])             {host: 'value1',username: 'value2'}
   Object  config.get({host: {name: 'ssm/path'}})      {host: {name: 'value'}}
  **/
-let getConfigs = (request, useCache = true) => {
+module.exports.get = async (request, useCache = true) => {
   var ssm = new AWS.SSM();
   var outputTemplate = null;
   if (!process.env.NODE_ENV)
@@ -55,7 +55,7 @@ let getConfigs = (request, useCache = true) => {
     request = getAllKeys(request);
   }
   if (typeof request === "string") request = [request];
-  if (!request.length) throw new Error("params must not be empty");
+  if (!request || !request.length) throw new Error("params must not be empty");
   let params = [].concat(request); // create a new copy
 
   var result = useCache && retrieveCache(request);
@@ -103,7 +103,7 @@ let getConfigs = (request, useCache = true) => {
   });
 };
 
-var _getConfigsByPath = (ssm, path, results = {}, token) => {
+var _getConfigsByPath = async (ssm, path, results = {}, token) => {
   if (!path) throw new Error("params must not be empty");
   return ssm
     .getParametersByPath({
@@ -134,7 +134,5 @@ var getConfigsByPath = path => {
   return _getConfigsByPath(ssm, path);
 };
 
-module.exports = getConfigs;
-module.exports.get = getConfigs; // alternative descriptive api and useful for mocking purposes
 module.exports.getByPath = getConfigsByPath;
 module.exports.localPort = 10641;
