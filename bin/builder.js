@@ -11,14 +11,16 @@ const DEFAULT_OUTPUT_PATH = "./src/config.js";
 
 let outputPath;
 let templatePath;
+let interactive;
 
 process.argv.forEach(arg => {
   const [k, v] = arg.split("=");
   if (k === "output") {
     outputPath = v;
-  }
-  if (k === "template") {
+  } else if (k === "template") {
     templatePath = v;
+  } else if (k === "interactive") {
+    interactive = v;
   }
 });
 
@@ -37,7 +39,7 @@ if (showWarning) {
 
 console.log("\x1b[32mSTARTING TO BUILD CONFIG FILE\x1b[0m\n");
 
-if (fs.existsSync(outputPath)) {
+if (fs.existsSync(outputPath) && interactive) {
   const readline = require("readline").createInterface({
     input: process.stdin,
     output: process.stdout
