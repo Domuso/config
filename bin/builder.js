@@ -87,7 +87,7 @@ async function getConfig(templatePath) {
 function writeFile(cfg, fullPath) {
   console.log(`Writing to ${fullPath}`);
   try {
-    fs.writeFileSync(fullPath, "module.exports =" + JSON.stringify(cfg)); // { flag: "w" } => default. overwrites. { flag: "wx" } => don't overwrite
+    fs.writeFileSync(fullPath, "module.exports =" + JSON.stringify(cfg, null, 2)); // { flag: "w" } => default. overwrites. { flag: "wx" } => don't overwrite
   } catch (err) {
     console.error("\x1b[31m\nERROR: Failed writing config file\n\x1b[0m");
     console.error(err);
