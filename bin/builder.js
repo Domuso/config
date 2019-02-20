@@ -78,7 +78,7 @@ function writeFile() {
     .then(cfg => {
       console.log("\x1b[32m\nSuccessfully got SSM config\n\x1b[0m");
       console.log(`Writing to ${outputPath}`);
-      fs.writeFileSync(outputPath, "module.exports =" + JSON.stringify(cfg)); // { flag: "w" } => default. overwrites. { flag: "wx" } => don't overwrite
+      fs.writeFileSync(outputPath, "module.exports =" + JSON.stringify(cfg, null, 2)); // { flag: "w" } => default. overwrites. { flag: "wx" } => don't overwrite
       console.log("\x1b[32m\nDone Building config\n\x1b[0m");
     })
     .catch(e => {
