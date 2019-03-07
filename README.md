@@ -34,6 +34,29 @@ configs.get(template).then((conf) => {
 
 Keys are cached in-memory for retrieval to prevent unnecessary reloads of the config
 
+## Build Scripts
+
+When installing this as a dependency, you will have access to `configBuilder` command in npm scripts.  This is useful when tying in node scripts in package.json, for example while validating your config.json template:
+
+```
+...
+  "scripts": {
+    "predeploy": "configBuilder"
+  }
+...
+```
+
+For UI projects, it is also helpful to pull down configurations from a template file and write them to local file before building:
+
+```
+...
+  "scripts": {
+    "prebuild": "configBuilder output=./src/config.json"
+    "build": "webpack"
+  }
+...
+```
+
 
 ## Local Development
 
