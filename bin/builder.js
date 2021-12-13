@@ -41,7 +41,7 @@ async function execute() {
 
   if (!outputPath) return;
 
-  cfg["env"] = process.env.NODE_ENV
+  cfg["env"] = process.env.NODE_ENV;
 
   let fullPath = path.join(process.cwd(), outputPath);
   if (!fs.existsSync(fullPath) || !interactive) {
@@ -56,7 +56,7 @@ async function execute() {
 
   readline.question(`\x1b[41mConfig file already exists. Overwrite (y/n)?\x1b[0m `, answer => {
     if (["yes", "y"].includes(answer.toLowerCase())) {
-      cfg["env"] = process.env.NODE_ENV
+      cfg["env"] = process.env.NODE_ENV;
       writeFile(cfg, fullPath);
     } else {
       console.log("Skipping config creation");
