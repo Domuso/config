@@ -19,7 +19,7 @@ process.argv.forEach(arg => {
   } else if (k === "template") {
     templatePath = v;
   } else if (k === "interactive") {
-    interactive = v;
+    interactive = JSON.parse(v);
   }
 });
 
