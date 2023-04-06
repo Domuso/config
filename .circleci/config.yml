@@ -8,11 +8,14 @@ jobs:
       - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
+          name: update npm
+          command: npm i -g npm@8.10.0
+      - run:
           name: install dependencies
-          command: npm install 
+          command: npm install
       - run:
           name: test
-          command: npm run cover 
+          command: npm run cover
       - save_cache:
           key: dependency-cache-{{ checksum "package.json" }}
           paths:
