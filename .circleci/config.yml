@@ -9,7 +9,7 @@ jobs:
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
           name: update npm
-          command: npm i -g npm@8.10.0
+          command: sudo npm i -g npm@8.10.0
       - run:
           name: install dependencies
           command: npm install
