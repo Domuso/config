@@ -1,8 +1,14 @@
 const sinon = require("sinon");
 const chai = require("chai");
 const axios = require("axios");
-const AWS = require("aws-sdk-mock");
 const rewire = require("rewire");
+
+const { mockClient } = require("aws-sdk-client-mock");
+const {
+  SSMClient,
+  GetParametersByPathCommand,
+  GetParametersCommand
+} = require("@aws-sdk/client-ssm");
 
 chai.use(require("chai-as-promised"));
 chai.use(require("sinon-chai"));
@@ -15,13 +21,20 @@ const configResults = require("./fixtures/config-results");
 
 describe("config", () => {
   let resetCache;
+  let ssmMock;
+  before(() => {
+    ssmMock = mockClient(SSMClient);
+  });
   beforeEach(() => {
     process.env.NODE_ENV = "test";
     resetCache = config.__set__("cache", {});
   });
   afterEach(() => {
-    AWS.restore();
+    ssmMock.reset();
     resetCache();
+  });
+  after(() => {
+    ssmMock.restore();
   });
   it("exists", () => {
     config.should.be.a("function");
@@ -34,17 +47,11 @@ describe("config", () => {
     (() => config.get([])).should.throw("params must not be empty");
   });
   it("fails promise when error", () => {
-    AWS.mock("SSM", "getParameters", (params, cb) => {
-      cb(new Error("some AWS error"));
-    });
-
+    ssmMock.on(GetParametersCommand).rejects(new Error("some AWS error"));
     return config.get(["mysql.host"]).should.eventually.be.rejectedWith("some AWS error");
   });
   it("fails promise when there are any invalid parameters returned", () => {
-    AWS.mock("SSM", "getParameters", (params, cb) => {
-      cb(null, { InvalidParameters: ["some-invalid-param"] });
-    });
-
+    ssmMock.on(GetParametersCommand).resolves({ InvalidParameters: ["some-invalid-param"] });
     return config
       .get(["mysql.host"])
       .should.eventually.be.rejectedWith("Error: Invalid requested params");
@@ -54,16 +61,11 @@ describe("config", () => {
   });
 
   it("fails promise when error", () => {
-    AWS.mock("SSM", "getParametersByPath", (params, cb) => {
-      cb(new Error("some AWS error"));
-    });
-
+    ssmMock.on(GetParametersByPathCommand).rejects(new Error("some AWS error"));
     return config.getByPath("/dev").should.eventually.be.rejectedWith("some AWS error");
   });
   it("fails promise when there are any invalid parameters returned", () => {
-    AWS.mock("SSM", "getParametersByPath", (params, cb) => {
-      cb(null, { InvalidParameters: ["some-invalid-param"] });
-    });
+    ssmMock.on(GetParametersByPathCommand).resolves({ InvalidParameters: ["some-invalid-param"] });
 
     return config
       .getByPath("/dev")
@@ -71,16 +73,10 @@ describe("config", () => {
   });
 
   describe("fetching values", () => {
-    let spy;
     beforeEach(() => {
-      spy = sinon.spy((params, cb) => {
-        cb(null, { Parameters: [{ Name: "/test/mysql.host", Value: "some-host" }] });
-      });
-
-      AWS.mock("SSM", "getParameters", spy);
-    });
-    afterEach(() => {
-      AWS.restore();
+      ssmMock
+        .on(GetParametersCommand)
+        .resolves({ Parameters: [{ Name: "/test/mysql.host", Value: "some-host" }] });
     });
 
     it("returns a promise", () => {
@@ -108,49 +104,33 @@ describe("config", () => {
     it("returns with cached values by default", () => {
       return config.get("mysql.host").then(() =>
         config.get("mysql.host").then(() => {
-          spy.callCount.should.equal(1);
+          ssmMock.send.callCount.should.equal(1);
         })
       );
     });
     it("returns with fresh values when requested", () => {
       return config.get("mysql.host").then(() =>
         config.get("mysql.host", false).then(() => {
-          spy.callCount.should.equal(2);
+          ssmMock.send.callCount.should.equal(2);
         })
       );
     });
   });
 
   describe("fetching values by path", () => {
-    const stub = sinon.stub();
-
-    beforeEach(() => {
-      AWS.mock("SSM", "getParametersByPath", stub);
-    });
-    afterEach(() => {
-      AWS.restore();
-      stub.reset();
-    });
-
     it("returns a promise", () => {
+      ssmMock.on(GetParametersByPathCommand).resolves();
       config.getByPath("/blah").should.be.an.instanceof(Promise);
     });
 
     it("returns with values when provided a string", () => {
-      stub.onFirstCall().callsFake((params, cb) => {
-        cb(null, {
-          Parameters: [{ Name: "/test/mysql.host", Value: "some-host" }],
-          NextToken: "abc"
-        });
+      ssmMock.send.onFirstCall().resolves({
+        Parameters: [{ Name: "/test/mysql.host", Value: "some-host" }],
+        NextToken: "abc"
       });
-
-      stub.onSecondCall().callsFake((params, cb) => {
-        cb(null, {
-          Parameters: [{ Name: "/test/mysql.user", Value: "some-user" }]
-        });
+      ssmMock.send.onSecondCall().resolves({
+        Parameters: [{ Name: "/test/mysql.user", Value: "some-user" }]
       });
-
-      AWS.mock("SSM", "getParametersByPath", stub);
 
       return config.getByPath("/test").then(values => {
         values.should.include({ "mysql.host": "some-host", "mysql.user": "some-user" });
@@ -160,12 +140,9 @@ describe("config", () => {
 
   describe("fetching templated values", () => {
     beforeEach(() => {
-      AWS.mock("SSM", "getParameters", (params, cb) => {
-        cb(null, { Parameters: [{ Name: "/test/path/to/ssm", Value: "blah" }] });
-      });
-    });
-    afterEach(() => {
-      AWS.restore();
+      ssmMock
+        .on(GetParametersCommand)
+        .resolves({ Parameters: [{ Name: "/test/path/to/ssm", Value: "blah" }] });
     });
     it("returns with values when provided an object", () => {
       return config.get({ "mysql.host": "path/to/ssm" }).then(function(values) {
@@ -187,18 +164,15 @@ describe("config", () => {
 
   describe("handles config with more than 10 parameters", () => {
     beforeEach(() => {
-      AWS.mock("SSM", "getParameters", (params, cb) => {
+      ssmMock.on(GetParametersCommand).callsFake(params => {
         // mocks the response with the appropriate results from the config-results file
         const Parameters = params.Names.reduce((result, param) => {
           result.push({ Name: param, Value: configValues[param] });
           return result;
         }, []);
 
-        cb(null, { Parameters });
+        return Promise.resolve({ Parameters });
       });
-    });
-    afterEach(() => {
-      AWS.restore();
     });
 
     it("returns with values when provided a deep object that has more than 10 params", () => {

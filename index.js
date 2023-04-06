@@ -1,5 +1,8 @@
-const AWS = require("aws-sdk");
-AWS.config.update({ region: "us-east-1" });
+const {
+  SSMClient,
+  GetParametersByPathCommand,
+  GetParametersCommand
+} = require("@aws-sdk/client-ssm");
 
 var cache = {};
 
@@ -42,7 +45,7 @@ var retrieveCache = params => {
   Object  config.get({host: {name: 'ssm/path'}})      {host: {name: 'value'}}
  **/
 let getConfigs = (request, useCache = true) => {
-  var ssm = new AWS.SSM();
+  var ssm = new SSMClient({ region: "us-east-1" });
   var outputTemplate = null;
   if (!process.env.NODE_ENV)
     throw new Error("NODE_ENV must be supplied as an environment variable");
@@ -68,29 +71,27 @@ let getConfigs = (request, useCache = true) => {
     }
     result = Promise.all(
       chunkedParams.map(chunkedParam => {
-        var options = {
+        const options = {
           Names: chunkedParam.map(param => `/${process.env.NODE_ENV}/${param}`),
           WithDecryption: true
         };
-        return ssm
-          .getParameters(options)
-          .promise()
-          .then(data => {
-            if (data.InvalidParameters && data.InvalidParameters.length > 0) {
-              const errorMsg = `Invalid requested params ${data.InvalidParameters}`;
-              console.error(errorMsg);
-              throw new Error(errorMsg);
-            }
-            var output = {};
-            var values = data.Parameters.reduce((prev, param) => {
-              var normalizedKey = param.Name.substring(process.env.NODE_ENV.length + 2); // strip the leading / as well
-              prev[normalizedKey] = param.Value;
-              return prev;
-            }, output);
+        const getParameters = new GetParametersCommand(options);
+        return ssm.send(getParameters).then(data => {
+          if (data.InvalidParameters && data.InvalidParameters.length > 0) {
+            const errorMsg = `Invalid requested params ${data.InvalidParameters}`;
+            console.error(errorMsg);
+            throw new Error(errorMsg);
+          }
+          var output = {};
+          var values = data.Parameters.reduce((prev, param) => {
+            var normalizedKey = param.Name.substring(process.env.NODE_ENV.length + 2); // strip the leading / as well
+            prev[normalizedKey] = param.Value;
+            return prev;
+          }, output);
 
-            Object.assign(cache, values); // save to cache
-            return values;
-          });
+          Object.assign(cache, values); // save to cache
+          return values;
+        });
       })
     ).then(chunkedResults => chunkedResults.reduce((prev, curr) => Object.assign(prev, curr), {}));
   }
@@ -105,32 +106,30 @@ let getConfigs = (request, useCache = true) => {
 
 var _getConfigsByPath = (ssm, path, results = {}, token) => {
   if (!path) throw new Error("params must not be empty");
-  return ssm
-    .getParametersByPath({
-      Path: path,
-      NextToken: token,
-      Recursive: true,
-      WithDecryption: true
-    })
-    .promise()
-    .then(data => {
-      if (data.InvalidParameters && data.InvalidParameters.length > 0) {
-        const errorMsg = `Invalid requested params ${data.InvalidParameters}`;
-        console.error(errorMsg);
-        throw new Error(errorMsg);
-      }
-      data.Parameters.forEach(param => {
-        var normalizedName = param.Name.substring(path.length + 1); // strip trailing / as well;
-        results[normalizedName] = param.Value;
-      });
-      return data.NextToken
-        ? _getConfigsByPath(ssm, path, results, data.NextToken)
-        : Promise.resolve(results);
+  const getParametersByPath = new GetParametersByPathCommand({
+    Path: path,
+    NextToken: token,
+    Recursive: true,
+    WithDecryption: true
+  });
+  return ssm.send(getParametersByPath).then(data => {
+    if (data.InvalidParameters && data.InvalidParameters.length > 0) {
+      const errorMsg = `Invalid requested params ${data.InvalidParameters}`;
+      console.error(errorMsg);
+      throw new Error(errorMsg);
+    }
+    data.Parameters.forEach(param => {
+      var normalizedName = param.Name.substring(path.length + 1); // strip trailing / as well;
+      results[normalizedName] = param.Value;
     });
+    return data.NextToken
+      ? _getConfigsByPath(ssm, path, results, data.NextToken)
+      : Promise.resolve(results);
+  });
 };
 
 var getConfigsByPath = path => {
-  var ssm = new AWS.SSM();
+  var ssm = new SSMClient({ region: "us-east-1" });
   return _getConfigsByPath(ssm, path);
 };
 
